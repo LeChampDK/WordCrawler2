@@ -14,7 +14,9 @@ import java.util.Set;
 public class Crawler {
     private char[] sep = " $'!,?;.:-_**+=)([]{}<>/@&%€#".toCharArray();
 
-    public void RunCrawler()
+    public void RunCrawler(){
+
+    }
 
 
     public Set<String> GetWordsFromFile(String filename) throws IOException {
