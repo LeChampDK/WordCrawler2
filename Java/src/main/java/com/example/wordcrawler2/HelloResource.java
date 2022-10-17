@@ -17,8 +17,7 @@ import java.util.List;
 @Path("/hello-world")
 public class HelloResource {
     Crawler crawler = new Crawler();
-    List<String> extensions = Arrays.asList(new String[]{".txt"});
-    java.nio.file.Path root = Paths.get(new File("").getAbsolutePath());
+
 
     @GET
     @Produces("text/plain")
@@ -30,16 +29,7 @@ public class HelloResource {
     @POST
     @Produces("text/plain")
     public String getWords() {
-        java.nio.file.Path dir = root;
-        try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(dir)) {
-            for (java.nio.file.Path file: stream) {
-                System.out.println(file.getFileName());
-            }
-        } catch (IOException | DirectoryIteratorException x) {
-            // IOException can never be thrown by the iteration.
-            // In this snippet, it can only be thrown by newDirectoryStream.
-            System.err.println(x);
-        }
+        crawler.runCrawler();
         return "Hello";
     }
 }
