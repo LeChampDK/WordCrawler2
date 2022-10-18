@@ -58,6 +58,6 @@ public class Crawler {
     }
 
     public void CrawlParallel(){
-        throw new ExecutionControl.NotImplementedException();
+        //throw new ExecutionControl.NotImplementedException();
     }
 }
