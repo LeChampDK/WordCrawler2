@@ -10,7 +10,7 @@ public class Crawler {
 
     Map<String, Integer> words = new HashMap<String, Integer>();
 
-    public Set<String> CountWordsInFile(String file) throws IOException {
+    public Set<String> ExtractWordsInFile(String file) throws IOException {
         String regex = "([^a-zA-Z']+)'*\\1*";
         Path path = Paths.get(URI.create(file));
         List<String> lines = Files.readAllLines(path);
@@ -28,12 +28,12 @@ public class Crawler {
         return res;
     }
 
-    public void GetFileFromFolder(File folder) throws IOException {
+    public void CrawlSequentially(File folder) throws IOException {
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
-                GetFileFromFolder(fileEntry);
+                CrawlSequentially(fileEntry);
             } else {
-                Set<String> foundWords = CountWordsInFile(fileEntry.getName());
+                Set<String> foundWords = ExtractWordsInFile(fileEntry.getName());
                 for(String word : foundWords){
                     if(!words.containsKey(word)){
                         words.put(word, 1);
