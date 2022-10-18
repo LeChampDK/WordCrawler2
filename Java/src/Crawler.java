@@ -78,7 +78,7 @@ public class Crawler {
             }
         }
 
-        System.out.println(words.get("WASHINGTON"));
+        System.out.println(words.size());
         System.out.println(documents.size());
     }
 
