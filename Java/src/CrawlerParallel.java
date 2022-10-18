@@ -8,7 +8,19 @@ import java.util.List;
 import java.util.Set;
 
 public class CrawlerParallel extends Thread {
-    public Set<String> ExtractWordsInFileParrallel(String file) throws IOException {
+    String file;
+
+    Set<String> words;
+
+    public CrawlerParallel(String fileName){
+        file = fileName;
+    }
+    public void run(String file) throws IOException, InterruptedException {
+        ExtractWordsInFileParrallel(file);
+    }
+
+    public void ExtractWordsInFileParrallel(String file) throws IOException, InterruptedException {
+        System.out.println(this.getName() + ": Thread...");
         String regex = "([^a-zA-Z']+)'*\\1*";
         Path path = Paths.get(file);
 
@@ -23,6 +35,7 @@ public class CrawlerParallel extends Thread {
             }
         }
 
-        return res;
+        words = res;
+        //return res;
     }
 }

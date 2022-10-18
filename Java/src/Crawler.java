@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Crawler {
 
@@ -82,9 +83,13 @@ public class Crawler {
         System.out.println(documents.size());
     }
 
-    public void CrawlParallel(String folder) throws IOException {
+    int i = 0;
+
+    public void CrawlParallel(String folder) throws IOException, InterruptedException, ExecutionException {
         File dir = new File(folder);
         File[] files = dir.listFiles();
+
+        ExecutorService threadpool = Executors.newCachedThreadPool();
 
         if (files != null && files.length > 0) {
             for (File file : files) {
@@ -105,25 +110,34 @@ public class Crawler {
                     String absolutePath = file.getAbsolutePath();
 
                     //make this parrallel
-                    CrawlerParallel crawlerParallel = new CrawlerParallel();
-                    Set<String> foundWords = crawlerParallel.ExtractWordsInFileParrallel(absolutePath);
-                    crawlerParallel.start();
-
-                    for (String word : foundWords) {
-                        if (!words.containsKey(word)) {
-                            words.put(word, 1);
-                        } else {
-                            words.put(word, words.get(word) + 1);
+                    Future<?> futureTask = threadpool.submit(() -> {
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        Set<String> foundWords = null;
+                        try {
+                            foundWords = ExtractWordsInFile(absolutePath);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
 
-                    }
+                        for (String word : foundWords) {
+                            if (!words.containsKey(word)) {
+                                words.put(word, 1);
+                            } else {
+                                words.put(word, words.get(word) + 1);
+                            }
+                        }
+                    });
 
                     //System.out.println(file.getName() + " (size in bytes: " + file.length() + ")");
                 }
             }
         }
-
-        System.out.println(words.size());
-        System.out.println(documents.size());
+        System.out.println(threadpool.toString());
+        //System.out.println(words.size());
+        //System.out.println(documents.size());
     }
 }
