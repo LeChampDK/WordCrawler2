@@ -17,7 +17,8 @@ public class Main {
         System.out.println(folderDir);
 
         long startTime = nanoTime();
-        crawler.CrawlSequentially(folderDir);
+        //crawler.CrawlSequentially(folderDir);
+        crawler.CrawlParallel(folderDir);
         long estimatedTime = nanoTime() - startTime;
         long estimatedTimeinMiliseconds = TimeUnit.NANOSECONDS.toMillis(estimatedTime);
         System.out.println("time in nanoseconds: " + estimatedTime);

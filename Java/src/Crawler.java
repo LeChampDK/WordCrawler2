@@ -82,7 +82,48 @@ public class Crawler {
         System.out.println(documents.size());
     }
 
-    public void CrawlParallel() {
-        //throw new ExecutionControl.NotImplementedException();
+    public void CrawlParallel(String folder) throws IOException {
+        File dir = new File(folder);
+        File[] files = dir.listFiles();
+
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    CrawlParallel(file.getAbsolutePath());
+                } else {
+                    if (!file.getPath().endsWith(".txt")) {
+                        continue;
+                    }
+
+                    BEDocument doc = new BEDocument();
+                    doc.setmId(documents.size() + 1);
+                    doc.setmUrl(file.getName());
+                    doc.setmIdxTimel(LocalDateTime.now().toString());
+                    doc.setmCreationTime(Files.getAttribute(file.toPath(), "creationTime").toString());
+                    documents.add(doc);
+
+                    String absolutePath = file.getAbsolutePath();
+
+                    //make this parrallel
+                    CrawlerParallel crawlerParallel = new CrawlerParallel();
+                    Set<String> foundWords = crawlerParallel.ExtractWordsInFileParrallel(absolutePath);
+                    crawlerParallel.start();
+
+                    for (String word : foundWords) {
+                        if (!words.containsKey(word)) {
+                            words.put(word, 1);
+                        } else {
+                            words.put(word, words.get(word) + 1);
+                        }
+
+                    }
+
+                    //System.out.println(file.getName() + " (size in bytes: " + file.length() + ")");
+                }
+            }
+        }
+
+        System.out.println(words.size());
+        System.out.println(documents.size());
     }
 }
