@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Crawler {
 
@@ -74,20 +76,21 @@ public class Crawler {
                     }
 
                     // We can use .length() to get the file size
-                    System.out.println(file.getName() + " (size in bytes: " + file.length() + ")");
+                    //System.out.println(file.getName() + " (size in bytes: " + file.length() + ")");
                 }
             }
         }
 
         System.out.println(words.size());
-        System.out.println(documents.size());
+        //System.out.println(documents.size());
     }
 
     int i = 0;
 
-    public void CrawlParallel(String folder) throws IOException, InterruptedException, ExecutionException {
+    public void CrawlParallel(String folder) throws IOException {
         File dir = new File(folder);
         File[] files = dir.listFiles();
+        Lock lock = new ReentrantLock();
 
         ExecutorService threadpool = Executors.newCachedThreadPool();
 
@@ -111,11 +114,6 @@ public class Crawler {
 
                     //make this parrallel
                     Future<?> futureTask = threadpool.submit(() -> {
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
                         Set<String> foundWords = null;
                         try {
                             foundWords = ExtractWordsInFile(absolutePath);
@@ -124,11 +122,13 @@ public class Crawler {
                         }
 
                         for (String word : foundWords) {
+                            lock.lock();
                             if (!words.containsKey(word)) {
                                 words.put(word, 1);
                             } else {
                                 words.put(word, words.get(word) + 1);
                             }
+                            lock.unlock();
                         }
                     });
 
@@ -136,8 +136,8 @@ public class Crawler {
                 }
             }
         }
-        System.out.println(threadpool.toString());
-        //System.out.println(words.size());
+        //System.out.println(threadpool.toString());
+        System.out.println(words.size());
         //System.out.println(documents.size());
     }
 }
