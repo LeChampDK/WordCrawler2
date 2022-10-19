@@ -67,17 +67,12 @@ namespace WordCounterDemo
             DateTime START = DateTime.Now;
 
             // Crawling sequentially
-            cl.CrawlSequentially(root, new List<string> { ".txt" });
-
-            // Crawling parallel
-            // todo;
+            cl.CrawlSeq(root);
 
             TimeSpan TIME_USED = DateTime.Now - START;
 
-            var res = cl.GetWords();
             var dirSize = DirSize(root);
 
-            Console.WriteLine("Words crawled: " +  res.Count());
             Console.WriteLine("Dir size in mb: " + (dirSize / 1024f) / 1024f);
             Console.WriteLine("TIME USED: " + TIME_USED.TotalMilliseconds);
         }
@@ -90,14 +85,14 @@ namespace WordCounterDemo
             DateTime START = DateTime.Now;
 
             // Crawling parallel
-            cl.CrawlParallel(root, new List<string> { ".txt" });
+            cl.CrawlPar(root);
 
             TimeSpan TIME_USED = DateTime.Now - START;
+
             var dirSize = DirSize(root);
+
             Console.WriteLine("Dir size in mb: " + (dirSize / 1024f) / 1024f);
             Console.WriteLine("TIME USED: " + TIME_USED.TotalMilliseconds);
-
-
         }
 
         public static long DirSize(DirectoryInfo d)

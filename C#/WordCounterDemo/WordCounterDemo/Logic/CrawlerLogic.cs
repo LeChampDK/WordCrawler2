@@ -10,17 +10,11 @@ namespace WordCounterDemo
 {
     public class CrawlerLogic
     {
-        private readonly char[] sep = " \\\n\t\"$'!,?;.:-_**+=)([]{}<>/@&%€#".ToCharArray();
-        private Dictionary<string, int> words = new Dictionary<string, int>();
-
-        public Dictionary<string, int> GetWords()
-        {
-            return words;
-        }
 
         // Returns a list of all words from a file
         private ISet<string> ExtractWordsInFile(FileInfo f)
         {
+            char[] sep = " \\\n\t\"$'!,?;.:-_**+=)([]{}<>/@&%€#".ToCharArray();
             var res = new HashSet<string>();
             var content = File.ReadAllLines(f.FullName);
             foreach (var line in content)
@@ -34,45 +28,16 @@ namespace WordCounterDemo
             return res;
         }
 
-        public void CrawlSequentially(DirectoryInfo dir, List<string> extensions)
+        public void CrawlSeq(DirectoryInfo dir)
         {
-            //Console.WriteLine("Crawling " + dir.Name);
-
-            foreach (var file in dir.EnumerateFiles())
-            {
-                var wordsInFile = ExtractWordsInFile(file);
-
-                foreach (var word in wordsInFile)
-                {
-                    if (!words.ContainsKey(word))
-                    {
-                        // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
-                        words.Add(word, 1);
-                    }
-                    else
-                    {
-                        // Console.WriteLine($"{word} is in the list, increment its count value");
-                        words[word]++;
-                    }
-                }
-            }
-            foreach (var d in dir.EnumerateDirectories())
-            {
-                CrawlSequentially(d, extensions);
-            }
-        }
-
-        public void CrawlParallel(DirectoryInfo dir, List<string> extensions)
-        {
-            object Lock = new object();
             Dictionary<string, int> pWords = new Dictionary<string, int>();
 
-            foreach (var file in dir.EnumerateFiles())
+            foreach (var d in dir.EnumerateDirectories("", SearchOption.AllDirectories))
             {
-                var wordsInFile = ExtractWordsInFile(file);
-                foreach (var word in wordsInFile)
+                foreach (var f in d.EnumerateFiles())
                 {
-                    lock (Lock)
+                    var wordsInFile = ExtractWordsInFile(f);
+                    foreach (var word in wordsInFile)
                     {
                         if (!pWords.ContainsKey(word))
                         {
@@ -88,11 +53,140 @@ namespace WordCounterDemo
                 }
             }
 
-            Parallel.ForEach(dir.EnumerateDirectories(), (dir, state, index) =>
-            {
-                CrawlParallel(dir, extensions);
-            });
+            Console.WriteLine("Words crawled: " + pWords.Count());
         }
+
+        public void CrawlPar(DirectoryInfo dir)
+        {
+            object Lock = new object();
+            Dictionary<string, int> pWords = new Dictionary<string, int>();
+
+            Parallel.ForEach(dir.EnumerateDirectories("", SearchOption.AllDirectories), d =>
+            {
+                Parallel.ForEach(d.EnumerateFiles(), f =>
+                {
+                    var wordsInFile = ExtractWordsInFile(f);
+                    foreach (var word in wordsInFile)
+                    {
+                        lock (Lock)
+                        {
+                            if (!pWords.ContainsKey(word))
+                            {
+                                // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
+                                pWords.Add(word, 1);
+                            }
+                            else
+                            {
+                                // Console.WriteLine($"{word} is in the list, increment its count value");
+                                pWords[word]++;
+                            }
+                        }
+                    }
+                });
+            });
+
+            Console.WriteLine("Words crawled: " + pWords.Count());
+        }
+
+
+        // Recursion will cause dictionary to reset (!)
+        //public void CrawlParallel(DirectoryInfo dir, List<string> extensions)
+        //{
+        //    Dictionary<string, int> pWords = new Dictionary<string, int>();
+        //    object Lock = new object();
+
+        //    foreach (var file in dir.EnumerateFiles())
+        //    {
+        //        var wordsInFile = ExtractWordsInFile(file);
+        //        foreach (var word in wordsInFile)
+        //        {
+        //            lock (Lock)
+        //            {
+        //                if (!pWords.ContainsKey(word))
+        //                {
+        //                    // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
+        //                    pWords.Add(word, 1);
+        //                }
+        //                else
+        //                {
+        //                    // Console.WriteLine($"{word} is in the list, increment its count value");
+        //                    pWords[word]++;
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    Parallel.ForEach(dir.EnumerateDirectories(), (dir, state, index) =>
+        //    {
+        //        CrawlParallel(dir, extensions);
+        //    });
+        //}
+
+        //public void CrawlTestLinq(DirectoryInfo dir)
+        //{
+        //    object Lock = new object();
+        //    Dictionary<string, int> pWords = new Dictionary<string, int>();
+
+        //    var sets = dir
+        //        .EnumerateDirectories("", SearchOption.AllDirectories)
+        //        .AsParallel()
+        //        .SelectMany(d => d.EnumerateFiles())
+        //        .Select(f => ExtractWordsInFile(f));
+
+        //    Parallel.ForEach(sets, s =>
+        //    {
+        //        foreach (var word in f)
+        //        {
+        //            lock (Lock)
+        //            {
+        //                if (!pWords.ContainsKey(word))
+        //                {
+        //                    // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
+        //                    pWords.Add(word, 1);
+        //                }
+        //                else
+        //                {
+        //                    // Console.WriteLine($"{word} is in the list, increment its count value");
+        //                    pWords[word]++;
+        //                }
+        //            }
+        //        }
+        //    });
+
+        //    Console.WriteLine("Words crawled: " + pWords.Count());
+        //}
+
+        // Recursion will cause dictionary to reset (!)
+        //public void CrawlTest2(DirectoryInfo dir)
+        //{
+        //    object Lock = new object();
+        //    Dictionary<string, int> pWords = new Dictionary<string, int>();
+
+        //    Parallel.ForEach(dir.EnumerateFiles(), f =>
+        //    {
+        //        var wordsInFile = ExtractWordsInFile(f);
+        //        Parallel.ForEach(wordsInFile, word =>
+        //        {
+        //            lock (Lock)
+        //            {
+        //                if (!pWords.ContainsKey(word))
+        //                {
+        //                    // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
+        //                    pWords.Add(word, 1);
+        //                }
+        //                else
+        //                {
+        //                    // Console.WriteLine($"{word} is in the list, increment its count value");
+        //                    pWords[word]++;
+        //                }
+        //            }
+        //        });
+        //    });
+        //    Parallel.ForEach(dir.EnumerateDirectories(), d =>
+        //    {
+        //        CrawlTest2(d);
+        //    });
+        //}
 
     }
 }
