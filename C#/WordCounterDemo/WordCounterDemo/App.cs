@@ -28,7 +28,7 @@ namespace WordCounterDemo
                         handleCrawlSequentially();
                         break;
                     case 2:
-                        Console.WriteLine("Todo");
+                        handleCrawlParallel();
                         break;
                     case 3:
                         Console.WriteLine("Closing");
@@ -75,18 +75,29 @@ namespace WordCounterDemo
             TimeSpan TIME_USED = DateTime.Now - START;
 
             var res = cl.GetWords();
-            var documents = cl.GetDocuments();
             var dirSize = DirSize(root);
 
             Console.WriteLine("Words crawled: " +  res.Count());
-            Console.WriteLine("Documents crawled: " + documents.Count());
             Console.WriteLine("Dir size in mb: " + (dirSize / 1024f) / 1024f);
             Console.WriteLine("TIME USED: " + TIME_USED.TotalMilliseconds);
         }
 
         private void handleCrawlParallel()
         {
-            Console.WriteLine("Not implemented");
+            CrawlerLogic cl = new CrawlerLogic();
+            var root = new DirectoryInfo(Config.DATASET);
+
+            DateTime START = DateTime.Now;
+
+            // Crawling parallel
+            cl.CrawlParallel(root, new List<string> { ".txt" });
+
+            TimeSpan TIME_USED = DateTime.Now - START;
+            var dirSize = DirSize(root);
+            Console.WriteLine("Dir size in mb: " + (dirSize / 1024f) / 1024f);
+            Console.WriteLine("TIME USED: " + TIME_USED.TotalMilliseconds);
+
+
         }
 
         public static long DirSize(DirectoryInfo d)

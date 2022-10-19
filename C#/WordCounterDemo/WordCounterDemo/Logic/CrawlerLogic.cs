@@ -11,18 +11,11 @@ namespace WordCounterDemo
     public class CrawlerLogic
     {
         private readonly char[] sep = " \\\n\t\"$'!,?;.:-_**+=)([]{}<>/@&%€#".ToCharArray();
-
         private Dictionary<string, int> words = new Dictionary<string, int>();
-        private List<BEDocument> documents = new List<BEDocument>();
 
         public Dictionary<string, int> GetWords()
         {
             return words;
-        }
-
-        public List<BEDocument> GetDocuments()
-        {
-            return documents;
         }
 
         // Returns a list of all words from a file
@@ -43,19 +36,10 @@ namespace WordCounterDemo
 
         public void CrawlSequentially(DirectoryInfo dir, List<string> extensions)
         {
-            Console.WriteLine("Crawling " + dir.Name);
+            //Console.WriteLine("Crawling " + dir.Name);
 
             foreach (var file in dir.EnumerateFiles())
             {
-                BEDocument newDoc = new BEDocument
-                {
-                    mId = documents.Count + 1,
-                    mUrl = file.FullName,
-                    mIdxTime = DateTime.Now.ToString(),
-                    mCreationTime = file.CreationTime.ToString()
-                };
-                documents.Add(newDoc);
-
                 var wordsInFile = ExtractWordsInFile(file);
 
                 foreach (var word in wordsInFile)
@@ -80,7 +64,35 @@ namespace WordCounterDemo
 
         public void CrawlParallel(DirectoryInfo dir, List<string> extensions)
         {
-            throw new NotImplementedException();
+            object Lock = new object();
+            Dictionary<string, int> pWords = new Dictionary<string, int>();
+
+            foreach (var file in dir.EnumerateFiles())
+            {
+                var wordsInFile = ExtractWordsInFile(file);
+                foreach (var word in wordsInFile)
+                {
+                    lock (Lock)
+                    {
+                        if (!pWords.ContainsKey(word))
+                        {
+                            // Console.WriteLine($"{word} does not exist in the list, adding it with 1 count");
+                            pWords.Add(word, 1);
+                        }
+                        else
+                        {
+                            // Console.WriteLine($"{word} is in the list, increment its count value");
+                            pWords[word]++;
+                        }
+                    }
+                }
+            }
+
+            Parallel.ForEach(dir.EnumerateDirectories(), (dir, state, index) =>
+            {
+                CrawlParallel(dir, extensions);
+            });
         }
+
     }
 }

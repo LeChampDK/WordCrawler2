@@ -8,6 +8,6 @@ namespace WordCounterDemo
 {
     public class Config
     {
-        public static string DATASET = @"/Users/Rizvan/Desktop/enron/maildir/arnold-j";
+        public static string DATASET = @"/Users/Rizvan/Desktop/enron/114mb";
     }
 }
